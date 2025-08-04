@@ -50,4 +50,83 @@ print(f'Users count: {len(recordLines)}')
  
 for name in recordLines:
     print(f'{name} - {sum(recordLines[name])}')
+
+
+#----------------------------------------------------#
+
+class Command:
+    def execute(self, data, recordLines, maxCapacity):
+        raise NotImplementedError
+
+
+class AddCommand(Command):
+    def execute(self, data, recordLines, maxCapacity):
+        name, sent, received = data[1], int(data[2]), int(data[3])
+
+        if name not in recordLines:
+            recordLines[name] = [sent, received]
+
+
+class MessageCommand(Command):
+    def execute(self, data, recordLines, maxCapacity):
+        sender, receiver = data[1], data[2]
+
+        if sender in recordLines and receiver in recordLines:
+            CAPACITY_REACHED_MESSAGE = "{} reached the capacity!"
+
+            if (sum(recordLines[sender]) + 1) >= maxCapacity:
+                del recordLines[sender]
+                print(CAPACITY_REACHED_MESSAGE.format(sender))
+            else:
+                recordLines[sender][0] += 1
+
+            if (sum(recordLines[receiver]) + 1) >= maxCapacity:
+                del recordLines[receiver]
+                print(CAPACITY_REACHED_MESSAGE.format(receiver))
+            else:
+                recordLines[receiver][1] += 1
+
+
+class EmptyCommand(Command):
+    def execute(self, data, recordLines, maxCapacity):
+        DELETE_ALL_OPTION = "All"
+
+        if data[1] == DELETE_ALL_OPTION:
+            recordLines.clear()
+        else:
+            del recordLines[data[1]]
+
+
+commandMapper = {
+    "Add": AddCommand(),
+    "Message": MessageCommand(),
+    "Empty": EmptyCommand()
+}
+
+
+END_OF_INPUT_STR = "Statistics"
+MAX_RECEIVED_SENT_MESSAGES_PER_PERSON = int(input())
+
+recordLines = {}
+
+while True:
+    currentReadInput = input()
+
+    if currentReadInput == END_OF_INPUT_STR:
+        break
+
+    SPLIT_SYMBOL = "="
+    currentInputArray = currentReadInput.split(SPLIT_SYMBOL)
+
+    commandName = currentInputArray[0]
+    commandExecutor = commandMapper.get(commandName)
+    if commandExecutor:
+        commandExecutor.execute(currentInputArray, recordLines, MAX_RECEIVED_SENT_MESSAGES_PER_PERSON)
+
+
+print(f'Users count: {len(recordLines)}')
+
+for name in recordLines:
+    print(f'{name} - {sum(recordLines[name])}')
+
  
